@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>LabBook — Sistem Peminjaman Laboratorium</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1a;
+    --surface: #111827;
+    --surface2: #1a2335;
+    --border: #1e2d45;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --text: #e8edf5;
+    --muted: #6b7fa3;
+    --card-glow: 0 0 30px rgba(0,212,255,0.07);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── SCREENS ─── */
+  .screen { display: none; flex-direction: column; min-height: 100vh; animation: fadeIn 0.3s ease; }
+  .screen.active { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ─── TOPBAR ─── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+  .topbar-back { background: none; border: none; color: var(--accent); font-size: 22px; cursor: pointer; padding: 4px; }
+  .topbar-badge {
+    background: var(--accent); color: var(--bg);
+    font-size: 10px; font-weight: 700; font-family: 'Syne', sans-serif;
+    padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px;
+  }
+
+  /* ─── SCROLL BODY ─── */
+  .scroll-body { flex: 1; overflow-y: auto; padding-bottom: 32px; }
+  .scroll-body::-webkit-scrollbar { display: none; }
+
+  /* ─── ═══════════════════════════════ ─── */
+  /* ─── SCREEN 1: LOGIN                ─── */
+  /* ─── ═══════════════════════════════ ─── */
+  #s-login {
+    background: radial-gradient(ellipse at 50% -20%, rgba(0,212,255,0.15) 0%, var(--bg) 60%);
+    justify-content: center;
+    align-items: center;
+    padding: 40px 24px;
+    gap: 0;
+  }
+
+  .login-logo-wrap {
+    text-align: center; margin-bottom: 40px;
+  }
+  .login-logo-icon {
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    box-shadow: 0 0 40px rgba(0,212,255,0.3);
+    font-size: 32px;
+  }
+  .login-logo-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+  .login-logo-title span { color: var(--accent); }
+  .login-subtitle { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+  .login-card {
+    width: 100%; max-width: 400px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 28px 24px;
+    box-shadow: var(--card-glow);
+  }
+
+  .form-group { margin-bottom: 18px; }
+  .form-label { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 8px; }
+  .form-input {
+    width: 100%; padding: 14px 16px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,212,255,0.1); }
+  .form-input::placeholder { color: var(--muted); }
+
+  .btn-primary {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border: none; border-radius: 14px;
+    color: #fff; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.3px;
+    cursor: pointer; transition: transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(0,212,255,0.25);
+  }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-secondary {
+    width: 100%; padding: 14px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 14px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: background 0.15s;
+    margin-top: 10px;
+  }
+  .btn-secondary:active { background: var(--border); }
+
+  /* ─── ═══════════════════════════════ ─── */
+  /* ─── SCREEN 2: DASHBOARD LAB        ─── */
+  /* ─── ═══════════════════════════════ ─── */
+  .section-header { padding: 20px 20px 10px; }
+  .section-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+  .section-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  .user-greeting {
+    display: flex; align-items: center; gap: 12px;
+    padding: 18px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .user-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 16px; flex-shrink: 0;
+  }
+  .user-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+  .user-role { font-size: 12px; color: var(--muted); }
+
+  .lab-cards { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+  .lab-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .lab-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .lab-card:active { transform: scale(0.99); border-color: var(--accent); }
+  .lab-card:active::before { opacity: 1; }
+
+  .lab-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+  .lab-card-icon { font-size: 28px; }
+  .status-chip {
+    font-size: 10px; font-weight: 700; font-family: 'Syne', sans-serif; letter-spacing: 0.5px;
+    padding: 4px 10px; border-radius: 20px;
+  }
+  .status-chip.available { background: rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+  .status-chip.busy { background: rgba(239,68,68,0.12); color: var(--danger); border: 1px solid rgba(239,68,68,0.25); }
+  .status-chip.partial { background: rgba(245,158,11,0.12); color: var(--warning); border: 1px solid rgba(245,158,11,0.25); }
+
+  .lab-card-name { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .lab-card-desc { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+  .lab-card-meta { display: flex; gap: 16px; }
+  .lab-meta-item { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  .lab-meta-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .lab-meta-dot.green { background: var(--success); }
+  .lab-meta-dot.red { background: var(--danger); }
+
+  .btn-pick {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 14px; padding: 10px 18px;
+    background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 10px; color: var(--accent); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .btn-pick:active { background: rgba(0,212,255,0.15); }
+
+  /* ─── ═══════════════════════════════ ─── */
+  /* ─── SCREEN 3: DETAIL & FORM        ─── */
+  /* ─── ═══════════════════════════════ ─── */
+  .timeline-wrap { padding: 0 20px 20px; }
+  .timeline-label { font-size: 11px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .timeline-scroll { overflow-x: auto; padding-bottom: 8px; }
+  .timeline-scroll::-webkit-scrollbar { display: none; }
+  .timeline-track { display: flex; gap: 6px; width: max-content; }
+  .t-slot {
+    width: 50px; height: 44px; border-radius: 10px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .t-slot .t-hour { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; }
+  .t-slot .t-min { font-size: 9px; color: var(--muted); }
+  .t-slot.free { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: var(--success); }
+  .t-slot.taken { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); color: var(--danger); }
+  .t-slot.partial { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.2); color: var(--warning); }
+
+  .form-section { padding: 0 20px; }
+  .form-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    padding: 22px 20px; margin-bottom: 16px;
+  }
+  .form-card-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 16px; color: var(--muted); letter-spacing: 0.3px; }
+
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  select.form-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7fa3' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+  select.form-input option { background: var(--surface2); }
+
+  textarea.form-input { resize: none; min-height: 90px; }
+
+  .submit-wrap { padding: 0 20px 24px; }
+
+  /* ─── ═══════════════════════════════ ─── */
+  /* ─── MODAL                          ─── */
+  /* ─── ═══════════════════════════════ ─── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 999;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+    align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-sheet {
+    width: 100%; max-width: 460px;
+    background: var(--surface);
+    border-radius: 28px 28px 0 0;
+    padding: 28px 24px 40px;
+    border-top: 1px solid var(--border);
+    animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 24px; }
+  .modal-icon { text-align: center; font-size: 48px; margin-bottom: 16px; }
+  .modal-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 8px; }
+  .modal-msg { font-size: 14px; color: var(--muted); text-align: center; line-height: 1.6; margin-bottom: 20px; }
+  .modal-suggestion {
+    background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.15);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 20px;
+    font-size: 13px;
+  }
+  .modal-suggestion strong { color: var(--accent); }
+
+  .modal-danger .modal-title { color: var(--danger); }
+  .modal-danger .modal-icon::after { filter: hue-rotate(0); }
+
+  /* ─── ═══════════════════════════════ ─── */
+  /* ─── SCREEN 5: ADMIN DASHBOARD      ─── */
+  /* ─── ═══════════════════════════════ ─── */
+  .admin-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 16px 20px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 10px; text-align: center;
+  }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; }
+  .stat-num.yellow { color: var(--warning); }
+  .stat-num.green { color: var(--success); }
+  .stat-num.red { color: var(--danger); }
+  .stat-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  .req-list { padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
+  .req-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+    padding: 18px; position: relative; overflow: hidden;
+  }
+  .req-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--warning); border-radius: 3px 0 0 3px; }
+  .req-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--warning); margin-bottom: 10px; }
+  .req-name { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .req-meta { font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.7; }
+  .req-actions { display: flex; gap: 10px; }
+  .btn-approve {
+    flex: 1; padding: 11px;
+    background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3);
+    border-radius: 10px; color: var(--success); font-weight: 600; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    transition: background 0.15s;
+  }
+  .btn-approve:active { background: rgba(16,185,129,0.2); }
+  .btn-reject {
+    flex: 1; padding: 11px;
+    background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 10px; color: var(--danger); font-weight: 600; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    transition: background 0.15s;
+  }
+  .btn-reject:active { background: rgba(239,68,68,0.15); }
+
+  /* ─── BOTTOM NAV ─── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface); border-top: 1px solid var(--border);
+    display: flex; z-index: 200; padding: 10px 0 18px;
+  }
+  .nav-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: none; border: none; color: var(--muted); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.3px; cursor: pointer; padding: 4px 0;
+    transition: color 0.15s;
+  }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn-icon { font-size: 20px; }
+
+  /* Toast */
+  .toast {
+    position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 30px; padding: 12px 20px;
+    font-size: 13px; font-weight: 500;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    z-index: 500; opacity: 0; transition: all 0.3s; pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* divider */
+  .divider { height: 1px; background: var(--border); margin: 8px 20px; }
+
+  /* schedule strip */
+  .schedule-strip {
+    background: var(--surface); border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 14px; padding: 14px 16px; margin: 0 20px 16px;
+  }
+  .schedule-strip-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .schedule-strip-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--success); }
+  .schedule-day { font-size: 10px; color: var(--muted); }
+  .schedule-items { display: flex; flex-direction: column; gap: 6px; }
+  .schedule-item { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+  .schedule-time { font-family: 'Syne', sans-serif; font-size: 11px; color: var(--accent); width: 80px; flex-shrink: 0; }
+  .schedule-event { color: var(--muted); }
+
+  .pb-nav { padding-bottom: 90px !important; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════ -->
+<!-- SCREEN 1: LOGIN                   -->
+<!-- ══════════════════════════════════ -->
+<div id="s-login" class="screen active">
+  <div class="login-logo-wrap">
+    <div class="login-logo-icon">🔬</div>
+    <div class="login-logo-title">Lab<span>Book</span></div>
+    <div class="login-subtitle">Sistem Manajemen Peminjaman Laboratorium</div>
+  </div>
+
+  <div class="login-card">
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input class="form-input" type="text" id="inp-user" placeholder="NIM / NIP Anda">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" type="password" id="inp-pass" placeholder="••••••••">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Masuk ke Sistem →</button>
+    <button class="btn-secondary" onclick="doAdminLogin()">Masuk sebagai Admin</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!-- SCREEN 2: DASHBOARD LAB (USER)    -->
+<!-- ══════════════════════════════════ -->
+<div id="s-dashboard" class="screen">
+  <div class="topbar">
+    <div class="topbar-title">🔬 LabBook</div>
+    <button class="topbar-badge" onclick="logout()">Keluar</button>
+  </div>
+  <div class="scroll-body pb-nav">
+    <div class="user-greeting">
+      <div class="user-avatar">A</div>
+      <div>
+        <div class="user-name">Halo, Ahmad! 👋</div>
+        <div class="user-role">Mahasiswa · Teknik Informatika</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">Pilih Laboratorium</div>
+      <div class="section-sub">3 lab tersedia hari ini</div>
+    </div>
+
+    <div class="lab-cards">
+      <div class="lab-card" onclick="pickLab('Laboratorium Komputer')">
+        <div class="lab-card-header">
+          <span class="lab-card-icon">💻</span>
+          <span class="status-chip available">● Tersedia</span>
+        </div>
+        <div class="lab-card-name">Lab Komputer</div>
+        <div class="lab-card-desc">Gedung B Lt. 2 · 40 Unit PC</div>
+        <div class="lab-card-meta">
+          <span class="lab-meta-item"><span class="lab-meta-dot green"></span>6 slot bebas hari ini</span>
+          <span class="lab-meta-item">08:00–21:00</span>
+        </div>
+        <div class="btn-pick">Pilih Lab →</div>
+      </div>
+
+      <div class="lab-card" onclick="pickLab('Laboratorium Kimia')">
+        <div class="lab-card-header">
+          <span class="lab-card-icon">⚗️</span>
+          <span class="status-chip partial">◐ Sebagian</span>
+        </div>
+        <div class="lab-card-name">Lab Kimia</div>
+        <div class="lab-card-desc">Gedung C Lt. 1 · Kapasitas 30</div>
+        <div class="lab-card-meta">
+          <span class="lab-meta-item"><span class="lab-meta-dot green"></span>3 slot bebas hari ini</span>
+          <span class="lab-meta-item">07:00–17:00</span>
+        </div>
+        <div class="btn-pick">Pilih Lab →</div>
+      </div>
+
+      <div class="lab-card" onclick="pickLab('Laboratorium Fisika')">
+        <div class="lab-card-header">
+          <span class="lab-card-icon">🔭</span>
+          <span class="status-chip busy">✕ Sibuk</span>
+        </div>
+        <div class="lab-card-name">Lab Fisika</div>
+        <div class="lab-card-desc">Gedung A Lt. 3 · Kapasitas 25</div>
+        <div class="lab-card-meta">
+          <span class="lab-meta-item"><span class="lab-meta-dot red"></span>Penuh hingga 15:00</span>
+          <span class="lab-meta-item">08:00–18:00</span>
+        </div>
+        <div class="btn-pick">Lihat Jadwal →</div>
+      </div>
+    </div>
+
+    <div class="section-header" style="margin-top:8px">
+      <div class="section-title" style="font-size:15px">Jadwal Hari Ini</div>
+    </div>
+    <div class="schedule-strip">
+      <div class="schedule-strip-header">
+        <div class="schedule-strip-title">📅 Senin, 8 Juni 2026</div>
+        <div class="schedule-day">Semua Lab</div>
+      </div>
+      <div class="schedule-items">
+        <div class="schedule-item"><span class="schedule-time">08:00 – 10:00</span><span class="schedule-event">Praktikum Jarkom · Lab Komputer</span></div>
+        <div class="schedule-item"><span class="schedule-time">10:00 – 12:00</span><span class="schedule-event">Kimia Dasar 2 · Lab Kimia</span></div>
+        <div class="schedule-item"><span class="schedule-time">13:00 – 15:00</span><span class="schedule-event">Fisika Eksperimen · Lab Fisika</span></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active"><span class="nav-btn-icon">🏠</span>Beranda</button>
+    <button class="nav-btn" onclick="showScreen('s-form')"><span class="nav-btn-icon">📝</span>Ajukan</button>
+    <button class="nav-btn"><span class="nav-btn-icon">🔔</span>Notifikasi</button>
+    <button class="nav-btn"><span class="nav-btn-icon">👤</span>Profil</button>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!-- SCREEN 3: FORM PENGAJUAN          -->
+<!-- ══════════════════════════════════ -->
+<div id="s-form" class="screen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="showScreen('s-dashboard')">←</button>
+    <div class="topbar-title" id="form-lab-title">Form Pengajuan</div>
+    <div style="width:32px"></div>
+  </div>
+  <div class="scroll-body pb-nav">
+    <div style="padding: 16px 20px 8px;">
+      <div class="timeline-label">Ketersediaan Slot — Senin 8 Juni</div>
+      <div class="timeline-scroll">
+        <div class="timeline-track">
+          <div class="t-slot taken"><span class="t-hour">08</span><span class="t-min">PENUH</span></div>
+          <div class="t-slot taken"><span class="t-hour">09</span><span class="t-min">PENUH</span></div>
+          <div class="t-slot free"><span class="t-hour">10</span><span class="t-min">BEBAS</span></div>
+          <div class="t-slot free"><span class="t-hour">11</span><span class="t-min">BEBAS</span></div>
+          <div class="t-slot partial"><span class="t-hour">12</span><span class="t-min">SEBAG.</span></div>
+          <div class="t-slot free"><span class="t-hour">13</span><span class="t-min">BEBAS</span></div>
+          <div class="t-slot free"><span class="t-hour">14</span><span class="t-min">BEBAS</span></div>
+          <div class="t-slot taken"><span class="t-hour">15</span><span class="t-min">PENUH</span></div>
+          <div class="t-slot taken"><span class="t-hour">16</span><span class="t-min">PENUH</span></div>
+          <div class="t-slot free"><span class="t-hour">17</span><span class="t-min">BEBAS</span></div>
+          <div class="t-slot free"><span class="t-hour">18</span><span class="t-min">BEBAS</span></div>
+          <div class="t-slot free"><span class="t-hour">19</span><span class="t-min">BEBAS</span></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:10px;">
+        <span style="font-size:10px;color:var(--success)">■ Bebas</span>
+        <span style="font-size:10px;color:var(--warning)">■ Sebagian</span>
+        <span style="font-size:10px;color:var(--danger)">■ Penuh</span>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-card">
+        <div class="form-card-title">WAKTU PEMINJAMAN</div>
+        <div class="form-group">
+          <label class="form-label">Tanggal</label>
+          <select class="form-input">
+            <option>Senin, 8 Juni 2026</option>
+            <option>Selasa, 9 Juni 2026</option>
+            <option>Rabu, 10 Juni 2026</option>
+          </select>
+        </div>
+        <div class="row-2">
+          <div class="form-group">
+            <label class="form-label">Jam Mulai</label>
+            <select class="form-input">
+              <option>10:00</option><option>11:00</option><option>13:00</option>
+              <option>14:00</option><option>17:00</option><option>18:00</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Jam Selesai</label>
+            <select class="form-input">
+              <option>12:00</option><option>13:00</option><option>15:00</option>
+              <option>16:00</option><option>19:00</option><option>20:00</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-card-title">DETAIL KEGIATAN</div>
+        <div class="form-group">
+          <label class="form-label">Nama Peserta / Kegiatan</label>
+          <input class="form-input" type="text" placeholder="cth. Kelompok Jarkom 3A">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Jumlah Peserta</label>
+          <input class="form-input" type="number" placeholder="cth. 25">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Keperluan / Deskripsi</label>
+          <textarea class="form-input" placeholder="Jelaskan tujuan penggunaan laboratorium..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-wrap">
+      <button class="btn-primary" onclick="submitForm()">Ajukan Peminjaman →</button>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="showScreen('s-dashboard')"><span class="nav-btn-icon">🏠</span>Beranda</button>
+    <button class="nav-btn active"><span class="nav-btn-icon">📝</span>Ajukan</button>
+    <button class="nav-btn"><span class="nav-btn-icon">🔔</span>Notifikasi</button>
+    <button class="nav-btn"><span class="nav-btn-icon">👤</span>Profil</button>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!-- SCREEN 5: ADMIN DASHBOARD         -->
+<!-- ══════════════════════════════════ -->
+<div id="s-admin" class="screen">
+  <div class="topbar">
+    <div class="topbar-title">🛠 Panel Admin</div>
+    <button class="topbar-badge" onclick="logout()">Keluar</button>
+  </div>
+  <div class="scroll-body pb-nav">
+    <div class="user-greeting">
+      <div class="user-avatar" style="background:linear-gradient(135deg,#7c3aed,#ef4444)">S</div>
+      <div>
+        <div class="user-name">Dr. Siti Admin</div>
+        <div class="user-role">Administrator Lab · Akses Penuh</div>
+      </div>
+    </div>
+
+    <div class="admin-stats">
+      <div class="stat-card"><div class="stat-num yellow">5</div><div class="stat-lbl">Menunggu</div></div>
+      <div class="stat-card"><div class="stat-num green">12</div><div class="stat-lbl">Disetujui</div></div>
+      <div class="stat-card"><div class="stat-num red">2</div><div class="stat-lbl">Ditolak</div></div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title" style="font-size:16px">Pengajuan Masuk</div>
+      <div class="section-sub">Perlu tindakan — 5 pengajuan</div>
+    </div>
+
+    <div class="req-list">
+      <div class="req-card">
+        <div class="req-tag">⏳ Menunggu Persetujuan</div>
+        <div class="req-name">Ahmad Fauzi — Kelompok 3A</div>
+        <div class="req-meta">
+          💻 Lab Komputer · Gd. B Lt. 2<br>
+          📅 Senin, 8 Juni 2026 · 13:00–15:00<br>
+          👥 25 Peserta · Praktikum Jarkom
+        </div>
+        <div class="req-actions">
+          <button class="btn-approve" onclick="approveReq(this)">✔ Setujui</button>
+          <button class="btn-reject" onclick="rejectReq(this)">✕ Tolak</button>
+        </div>
+      </div>
+
+      <div class="req-card">
+        <div class="req-tag">⏳ Menunggu Persetujuan</div>
+        <div class="req-name">Budi Santoso — Kelompok 5B</div>
+        <div class="req-meta">
+          ⚗️ Lab Kimia · Gd. C Lt. 1<br>
+          📅 Selasa, 9 Juni 2026 · 10:00–12:00<br>
+          👥 18 Peserta · Uji Titrasi
+        </div>
+        <div class="req-actions">
+          <button class="btn-approve" onclick="approveReq(this)">✔ Setujui</button>
+          <button class="btn-reject" onclick="rejectReq(this)">✕ Tolak</button>
+        </div>
+      </div>
+
+      <div class="req-card">
+        <div class="req-tag">⏳ Menunggu Persetujuan</div>
+        <div class="req-name">Citra Dewi — TI 2024</div>
+        <div class="req-meta">
+          💻 Lab Komputer · Gd. B Lt. 2<br>
+          📅 Rabu, 10 Juni 2026 · 08:00–10:00<br>
+          👥 30 Peserta · Praktikum Basis Data
+        </div>
+        <div class="req-actions">
+          <button class="btn-approve" onclick="approveReq(this)">✔ Setujui</button>
+          <button class="btn-reject" onclick="rejectReq(this)">✕ Tolak</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active"><span class="nav-btn-icon">📋</span>Pengajuan</button>
+    <button class="nav-btn"><span class="nav-btn-icon">📅</span>Jadwal</button>
+    <button class="nav-btn"><span class="nav-btn-icon">📊</span>Laporan</button>
+    <button class="nav-btn" onclick="logout()"><span class="nav-btn-icon">🚪</span>Keluar</button>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!-- MODAL: BENTROK                    -->
+<!-- ══════════════════════════════════ -->
+<div id="modal-clash" class="modal-overlay">
+  <div class="modal-sheet modal-danger">
+    <div class="modal-handle"></div>
+    <div class="modal-icon">⚠️</div>
+    <div class="modal-title">Waktu Sudah Terpesan</div>
+    <div class="modal-msg">Maaf, slot <strong>Senin 8 Juni · 08:00–10:00</strong> di Lab Komputer telah dipesan oleh Kelompok Jarkom.</div>
+    <div class="modal-suggestion">
+      💡 <strong>Saran waktu kosong terdekat:</strong><br>
+      Lab Komputer tersedia pada <strong>13:00–15:00</strong> atau <strong>17:00–19:00</strong>
+    </div>
+    <button class="btn-primary" onclick="closeModal('modal-clash');showScreen('s-form')">Coba Waktu Lain</button>
+    <button class="btn-secondary" onclick="closeModal('modal-clash')">Batalkan</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!-- MODAL: SUKSES KIRIM               -->
+<!-- ══════════════════════════════════ -->
+<div id="modal-sent" class="modal-overlay">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-icon">📨</div>
+    <div class="modal-title" style="color:var(--accent)">Pengajuan Terkirim!</div>
+    <div class="modal-msg">Pengajuan Anda berhasil dikirim ke Admin untuk ditinjau. Anda akan mendapat notifikasi setelah diproses.</div>
+    <div class="modal-suggestion" style="background:rgba(0,212,255,0.06);border-color:rgba(0,212,255,0.15)">
+      ⏱️ Estimasi respon admin: <strong style="color:var(--accent)">1–2 jam kerja</strong>
+    </div>
+    <button class="btn-primary" onclick="closeModal('modal-sent');showScreen('s-dashboard')">Kembali ke Beranda</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!-- MODAL: DISETUJUI                  -->
+<!-- ══════════════════════════════════ -->
+<div id="modal-approved" class="modal-overlay">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-icon">🎉</div>
+    <div class="modal-title" style="color:var(--success)">Pengajuan Disetujui!</div>
+    <div class="modal-msg">Jadwal lab telah diperbarui. Notifikasi konfirmasi otomatis dikirim ke pemohon.</div>
+    <div class="modal-suggestion" style="background:rgba(16,185,129,0.06);border-color:rgba(16,185,129,0.2)">
+      ✅ Jadwal harian &amp; mingguan telah diperbarui otomatis
+    </div>
+    <button class="btn-primary" onclick="closeModal('modal-approved')">OK, Lanjutkan</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!-- MODAL: DITOLAK                    -->
+<!-- ══════════════════════════════════ -->
+<div id="modal-rejected" class="modal-overlay">
+  <div class="modal-sheet modal-danger">
+    <div class="modal-handle"></div>
+    <div class="modal-icon">📭</div>
+    <div class="modal-title" style="color:var(--danger)">Pengajuan Ditolak</div>
+    <div class="modal-msg">Notifikasi penolakan otomatis telah dikirim ke pemohon beserta alasan.</div>
+    <button class="btn-primary" onclick="closeModal('modal-rejected')">OK, Lanjutkan</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script>
+  let isAdmin = false;
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0,0);
+  }
+
+  function doLogin() {
+    const u = document.getElementById('inp-user').value.trim();
+    if (!u) { showToast('⚠️ Isi username terlebih dahulu'); return; }
+    isAdmin = false;
+    showScreen('s-dashboard');
+  }
+
+  function doAdminLogin() {
+    isAdmin = true;
+    showScreen('s-admin');
+  }
+
+  function logout() {
+    showScreen('s-login');
+    showToast('👋 Anda telah keluar');
+  }
+
+  function pickLab(name) {
+    document.getElementById('form-lab-title').textContent = name;
+    showScreen('s-form');
+  }
+
+  function submitForm() {
+    // Simulate 50/50: clash or success
+    const clash = Math.random() < 0.5;
+    if (clash) {
+      document.getElementById('modal-clash').classList.add('show');
+    } else {
+      document.getElementById('modal-sent').classList.add('show');
+    }
+  }
+
+  function approveReq(btn) {
+    const card = btn.closest('.req-card');
+    card.style.opacity = '0.4';
+    card.style.pointerEvents = 'none';
+    document.getElementById('modal-approved').classList.add('show');
+  }
+
+  function rejectReq(btn) {
+    const card = btn.closest('.req-card');
+    card.style.opacity = '0.4';
+    card.style.pointerEvents = 'none';
+    document.getElementById('modal-rejected').classList.add('show');
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('show');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // Close modal on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target === el) el.classList.remove('show');
+    });
+  });
+</script>
+</body>
+</html>
